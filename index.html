@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        #chat-history { border: 1px solid #ccc; height: 400px; overflow-y: scroll; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
+        .message { margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 4px; }
+        .user { background-color: #e3f2fd; text-align: right; }
+        .bot { background-color: #f1f1f1; }
+        #input-area { display: flex; gap: 0.5rem; }
+        input { flex-grow: 1; padding: 0.5rem; }
+        button { padding: 0.5rem 1rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Chat with GPT-4o-Mini</h1>
+    <div id="chat-history"></div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Type your message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const chatHistory = document.getElementById('chat-history');
+            const message = input.value;
+            if (!message) return;
+
+            // Add user message to UI
+            chatHistory.innerHTML += `<div class="message user"><strong>You:</strong> ${message}</div>`;
+            input.value = '';
+
+            try {
+                // Send to our Cloudflare Function
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                
+                // Add bot response to UI
+                chatHistory.innerHTML += `<div class="message bot"><strong>AI:</strong> ${data.reply}</div>`;
+                chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll
+            } catch (error) {
+                console.error('Error:', error);
+                chatHistory.innerHTML += `<div class="message bot" style="color:red">Error connecting to server.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
